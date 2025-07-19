@@ -1,143 +1,108 @@
-<<<<<<< HEAD
-# DWEXO-Chatbot
+# DWEXO Chatbot
 
+This repository contains the DWEXO Chatbot, a FastAPI application leveraging LangChain and a vector store (Chroma) for Retrieval-Augmented Generation (RAG) to answer questions about the DWEXO enterprise management platform.
 
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## Repository Structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/cherry-soft/dwexo-chatbot.git
-git branch -M main
-git push -uf origin main
+├── .gitlab-ci.yml      # GitLab CI/CD pipeline configuration
+├── .gitignore
+├── app/
+│   ├── Dockerfile      # Docker build instructions
+│   ├── main.py         # FastAPI app entrypoint
+│   ├── embed.py        # Script to embed documents into Chroma
+│   ├── query.py        # API handlers for querying the vector DB
+│   ├── utils.py        # Shared utilities (DB, settings)
+│   └── requirements.txt
+├── data/               # Source documents for ingestion (ignored via .gitignore)
+├── venv/               # Local Python virtual environment (ignored)
+└── README.md           # This file
 ```
 
-## Integrate with your tools
+## Prerequisites
 
-- [ ] [Set up project integrations](https://gitlab.com/cherry-soft/dwexo-chatbot/-/settings/integrations)
+* Python 3.9+
+* Docker & Docker Compose
+* GitLab account with Container Registry access
 
-## Collaborate with your team
+## Local Setup
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+1. **Clone the repo**
 
-## Test and Deploy
+   ```bash
+   git clone https://gitlab.com/cherry-soft/dwexo-chatbot.git
+   cd dwexo-chatbot
+   ```
 
-Use the built-in continuous integration in GitLab.
+2. **Create a virtual environment & install dependencies**
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # Linux/macOS
+   venv\Scripts\activate    # Windows
+   pip install --upgrade pip
+   pip install -r app/requirements.txt
+   ```
 
-***
+3. **Start the FastAPI server**
 
-# Editing this README
+   ```bash
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+   Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) to explore the OpenAPI UI.
 
-## Suggestions for a good README
+## Embedding Documents
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+Publish or update your vector store by running:
 
-## Name
-Choose a self-explaining name for your project.
+```bash
+python app/embed.py
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## Docker Usage
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+1. **Build the Docker image**
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+   ```bash
+   docker build -t registry.gitlab.com/cherry-soft/dwexo-chatbot/my-app:latest -f app/Dockerfile .
+   ```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+2. **Run the container locally**
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+   ```bash
+   docker run -p 8000:8000 registry.gitlab.com/cherry-soft/dwexo-chatbot/my-app:latest
+   ```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+3. **Push to GitLab Container Registry**
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+   ```bash
+   docker login registry.gitlab.com
+   docker push registry.gitlab.com/cherry-soft/dwexo-chatbot/my-app:latest
+   ```
+
+## Continuous Integration / Deployment
+
+The included `.gitlab-ci.yml` will automatically:
+
+* Build and test the Docker image
+* Push `:latest` to the Container Registry on merges to `main`
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+1. Create a new feature branch:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+   ```bash
+   git checkout -b feature/your-feature
+   ```
+2. Make your changes, commit, and push:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+   ```bash
+   git commit -am "Add new feature"
+   git push -u origin feature/your-feature
+   ```
+3. Open a Merge Request on GitLab.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
-=======
-# Langchain RAG Tutorial
-
-## Install dependencies
-
-1. Do the following before installing the dependencies found in `requirements.txt` file because of current challenges installing `onnxruntime` through `pip install onnxruntime`. 
-
-    - For MacOS users, a workaround is to first install `onnxruntime` dependency for `chromadb` using:
-
-    ```python
-     conda install onnxruntime -c conda-forge
-    ```
-    See this [thread](https://github.com/microsoft/onnxruntime/issues/11037) for additonal help if needed. 
-
-     - For Windows users, follow the guide [here](https://github.com/bycloudai/InstallVSBuildToolsWindows?tab=readme-ov-file) to install the Microsoft C++ Build Tools. Be sure to follow through to the last step to set the enviroment variable path.
-
-
-2. Now run this command to install dependenies in the `requirements.txt` file. 
-
-```python
-pip install -r requirements.txt
-```
-
-3. Install markdown depenendies with: 
-
-```python
-pip install "unstructured[md]"
-```
-
-## Create database
-
-Create the Chroma DB.
-
-```python
-python create_database.py
-```
-
-## Query the database
-
-Query the Chroma DB.
-
-```python
-python query_data.py "How does Alice meet the Mad Hatter?"
-```
-
-> You'll also need to set up an OpenAI account (and set the OpenAI key in your environment variable) for this to work.
-
-Here is a step-by-step tutorial video: [RAG+Langchain Python Project: Easy AI/Chat For Your Docs](https://www.youtube.com/watch?v=tcqEUSNCn8I&ab_channel=pixegami).
->>>>>>> ca94d8b (Add project sources)
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
