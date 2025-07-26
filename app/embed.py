@@ -5,7 +5,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_groq import ChatGroq
 from langchain.prompts import ChatPromptTemplate
-from .utils import DATA_PATH, get_embedding_db as _get_embedding_db, calculate_md5, MIN_SCORE
+from .utils import DATA_PATH, get_embedding_db as _get_embedding_db, calculate_md5, MIN_SCORE, send_notification_email
 from langdetect import detect
 import re
 
@@ -74,7 +74,7 @@ async def query_db(
     # 🧠 Handle memory recall (flexible)
     if re.search(r"what.*(ask|say)|chnowa.*(9olt|soutlek)", normalized):
         if not chat_memory:
-            return {"answer": "You haven’t asked anything yet.", "sources": []}
+            return {"answer": "You haven't asked anything yet.", "sources": []}
         memory_lines = "\n".join(f"- {q}" for q in chat_memory)
         return {
             "answer": f"You previously asked:\n{memory_lines}",
@@ -142,6 +142,12 @@ async def query_db(
         return {"retrieved": retrieved}
 
     if not results or results[0][1] < MIN_SCORE:
+        # Send notification email when question cannot be answered
+        try:
+            await send_notification_email(question)
+        except Exception as e:
+            print(f"Email notification failed: {e}")
+        
         return {
             "answer": "The provided documents do not contain sufficient information to answer this question.",
             "retrieved": retrieved

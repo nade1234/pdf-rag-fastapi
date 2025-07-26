@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Form
 from langchain_groq import ChatGroq
 from langchain.prompts import ChatPromptTemplate
-from .utils import get_embedding_db, MIN_SCORE
+from .utils import get_embedding_db, MIN_SCORE, send_notification_email
 
 # Load .env so that GROQ_API_KEY is available in os.environ
 load_dotenv()
@@ -54,6 +54,12 @@ async def query_db(
         return {"retrieved": retrieved}
 
     if not results or results[0][1] < MIN_SCORE:
+        # Send notification email when question cannot be answered
+        try:
+            send_notification_email(question)
+        except Exception as e:
+            print(f"Email notification failed: {e}")
+        
         return {
             "answer": "The provided documents do not contain sufficient information to answer this question.",
             "retrieved": retrieved
